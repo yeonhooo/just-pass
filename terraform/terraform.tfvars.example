@@ -1,0 +1,14 @@
+# AWS Region (서울)
+aws_region = "ap-northeast-2"
+
+# Project name
+project_name = "auto-quiz"
+
+# Environment
+environment = "prod"
+
+# GitHub repository (optional - for CI/CD)
+# github_repository = "https://github.com/username/auto-quiz"
+
+# GitHub access token (optional - for CI/CD)
+# github_access_token = "ghp_xxxxxxxxxxxx"
