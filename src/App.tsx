@@ -44,7 +44,7 @@ function App() {
   const [wrongOnlyMode, setWrongOnlyMode] = useState(false);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [knownQuestions, setKnownQuestions] = useState<number[]>([]);
-  const [currentProgress, setCurrentProgress] = useState<CloudProgress | null>(null);
+  const [, setCurrentProgress] = useState<CloudProgress | null>(null);
   
   // 설정
   const [settingShuffleQ, setSettingShuffleQ] = useState(false);
