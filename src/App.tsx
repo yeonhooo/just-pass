@@ -312,7 +312,7 @@ function App() {
     <AuthWrapper>
       <div className="app">
         <header className="app-header">
-          <h1 onClick={handleReset} style={{ cursor: 'pointer' }}>🎯 Auto Quiz</h1>
+          <h1 onClick={handleReset} style={{ cursor: 'pointer' }}>Just Pass</h1>
           <SignOutButton />
         </header>
         

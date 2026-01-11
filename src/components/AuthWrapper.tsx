@@ -83,13 +83,18 @@ const components = {
   },
 };
 
-// 로그아웃 버튼 컴포넌트
+// 로그아웃 버튼 컴포넌트 (이메일 표시 포함)
 export function SignOutButton() {
-  const { signOut } = useAuthenticator();
+  const { signOut, user } = useAuthenticator();
+  const email = user?.signInDetails?.loginId || '';
+  
   return (
-    <button onClick={signOut} className="btn-signout">
-      로그아웃
-    </button>
+    <div className="user-info">
+      {email && <span className="user-email">{email}</span>}
+      <button onClick={signOut} className="btn-signout">
+        로그아웃
+      </button>
+    </div>
   );
 }
 
