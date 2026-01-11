@@ -270,11 +270,12 @@ export async function clearProgressFromCloud(quizId: string): Promise<void> {
 
 
 // PDF 파일 S3에 업로드
-export async function uploadPdfToS3(file: File, quizId: string): Promise<string> {
+export async function uploadPdfToS3(file: File, userEmail: string): Promise<string> {
   const s3Client = await getS3Client();
-  const userId = await getUserId();
   
-  const key = `${userId}/${quizId}/${file.name}`;
+  // 이메일에서 @ 앞부분만 추출
+  const emailPrefix = userEmail.split('@')[0];
+  const key = `${emailPrefix}/${file.name}`;
   
   const arrayBuffer = await file.arrayBuffer();
   

@@ -43,10 +43,10 @@ export function parseQuestions(text: string): Question[] {
     
     const questionNumber = parseInt(numMatch[1]);
     
-    // Answer 추출 (Answer: 뒤에 오는 A-F, 쉼표 또는 공백으로 구분)
-    const answerMatch = block.match(/Answer:\s*([A-F](?:[\s,]+[A-F])*)/i);
+    // Answer 추출: "Answer:" 뒤 ~ "Explanation" 또는 줄 끝 전까지
+    const answerMatch = block.match(/Answer:\s*([A-F](?:\s+[A-F])*)\s*(?:Explanation|$)/i);
     const answers = answerMatch 
-      ? answerMatch[1].split(/[\s,]+/).filter(a => /^[A-F]$/.test(a.trim())).map(a => a.trim())
+      ? answerMatch[1].trim().split(/\s+/).filter(a => /^[A-F]$/i.test(a)).map(a => a.toUpperCase())
       : [];
     
     // Explanation 추출

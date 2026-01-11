@@ -33,7 +33,7 @@ interface QuizListItem {
 }
 
 function App() {
-  const { authStatus } = useAuthenticator((context) => [context.authStatus]);
+  const { authStatus, user } = useAuthenticator((context) => [context.authStatus, context.user]);
   const [view, setView] = useState<View>('home');
   const [savedQuizzes, setSavedQuizzes] = useState<QuizListItem[]>([]);
   const [progressMap, setProgressMap] = useState<Map<string, { quizId: string; currentIndex: number; completedAt?: number; score?: number }>>(new Map());
@@ -116,7 +116,8 @@ function App() {
       const quizId = await saveQuizToCloud(name, parsed);
       
       // S3에 원본 PDF 업로드 (백그라운드, 실패해도 무시)
-      uploadPdfToS3(file, quizId).catch(err => {
+      const userEmail = user?.signInDetails?.loginId || 'unknown';
+      uploadPdfToS3(file, userEmail).catch(err => {
         console.warn('PDF S3 업로드 실패 (무시됨):', err);
       });
       
