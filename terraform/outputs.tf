@@ -26,3 +26,8 @@ output "dynamodb_progress_table" {
 # Amplify는 콘솔에서 관리하므로 output 제거
 # App ID: d3o0zqn8c8tein
 # URL: https://main.d3o0zqn8c8tein.amplifyapp.com
+
+output "s3_pdf_bucket" {
+  description = "S3 Bucket for PDF storage"
+  value       = aws_s3_bucket.pdf_storage.bucket
+}

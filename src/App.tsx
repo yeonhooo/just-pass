@@ -16,6 +16,7 @@ import {
   saveProgressToCloud,
   getProgressFromCloud,
   clearProgressFromCloud,
+  uploadPdfToS3,
   type CloudProgress,
 } from './utils/cloudStorage';
 import type { Question } from './types/quiz';
@@ -113,6 +114,11 @@ function App() {
       
       const name = file.name.replace('.pdf', '');
       const quizId = await saveQuizToCloud(name, parsed);
+      
+      // S3에 원본 PDF 업로드 (백그라운드, 실패해도 무시)
+      uploadPdfToS3(file, quizId).catch(err => {
+        console.warn('PDF S3 업로드 실패 (무시됨):', err);
+      });
       
       await loadQuizzes();
       setCurrentQuizId(quizId);

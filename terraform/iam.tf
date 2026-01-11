@@ -60,3 +60,25 @@ resource "aws_iam_role_policy" "cognito_authenticated_dynamodb" {
 }
 
 # Amplify Service Role은 amplify.tf에서 관리
+
+# IAM Policy for S3 Access (PDF 업로드)
+resource "aws_iam_role_policy" "cognito_authenticated_s3" {
+  name = "${var.project_name}-s3-access"
+  role = aws_iam_role.cognito_authenticated.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject"
+        ]
+        Resource = [
+          "${aws_s3_bucket.pdf_storage.arn}/*"
+        ]
+      }
+    ]
+  })
+}

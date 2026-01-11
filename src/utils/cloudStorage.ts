@@ -1,7 +1,8 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { AWS_REGION, DYNAMODB_QUIZZES_TABLE, DYNAMODB_PROGRESS_TABLE } from '../aws-config';
+import { AWS_REGION, DYNAMODB_QUIZZES_TABLE, DYNAMODB_PROGRESS_TABLE, S3_PDF_BUCKET } from '../aws-config';
 import type { Question } from '../types/quiz';
 
 // 청크 크기 (DynamoDB 400KB 제한 고려, 약 50문제씩)
@@ -26,6 +27,25 @@ async function getDocClient() {
   });
   
   return DynamoDBDocumentClient.from(client);
+}
+
+// S3 클라이언트 생성
+async function getS3Client() {
+  const session = await fetchAuthSession();
+  const credentials = session.credentials;
+  
+  if (!credentials) {
+    throw new Error('인증이 필요합니다.');
+  }
+  
+  return new S3Client({
+    region: AWS_REGION,
+    credentials: {
+      accessKeyId: credentials.accessKeyId,
+      secretAccessKey: credentials.secretAccessKey,
+      sessionToken: credentials.sessionToken,
+    },
+  });
 }
 
 // 현재 사용자 ID 가져오기
@@ -246,4 +266,24 @@ export async function clearProgressFromCloud(quizId: string): Promise<void> {
     TableName: DYNAMODB_PROGRESS_TABLE,
     Key: { userId, quizId },
   }));
+}
+
+
+// PDF 파일 S3에 업로드
+export async function uploadPdfToS3(file: File, quizId: string): Promise<string> {
+  const s3Client = await getS3Client();
+  const userId = await getUserId();
+  
+  const key = `${userId}/${quizId}/${file.name}`;
+  
+  const arrayBuffer = await file.arrayBuffer();
+  
+  await s3Client.send(new PutObjectCommand({
+    Bucket: S3_PDF_BUCKET,
+    Key: key,
+    Body: new Uint8Array(arrayBuffer),
+    ContentType: 'application/pdf',
+  }));
+  
+  return key;
 }

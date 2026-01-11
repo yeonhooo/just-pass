@@ -34,3 +34,4 @@ export const configureAmplify = () => {
 export const AWS_REGION = import.meta.env.VITE_AWS_REGION;
 export const DYNAMODB_QUIZZES_TABLE = import.meta.env.VITE_DYNAMODB_QUIZZES_TABLE;
 export const DYNAMODB_PROGRESS_TABLE = import.meta.env.VITE_DYNAMODB_PROGRESS_TABLE;
+export const S3_PDF_BUCKET = import.meta.env.VITE_S3_PDF_BUCKET;
