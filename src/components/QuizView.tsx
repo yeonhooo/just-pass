@@ -7,7 +7,8 @@ interface Props {
   initialAnswers?: Map<number, string[]>;
   wrongOnlyMode?: boolean;
   knownQuestions?: number[];
-  onFinish: (answers: Map<number, string[]>) => void;
+  startedAt?: number;
+  onFinish: (answers: Map<number, string[]>, elapsedTime: number) => void;
   onReset: () => void;
   onProgressUpdate?: (index: number, answers: Map<number, string[]>) => void;
   onToggleKnown?: (questionNumber: number) => void;
@@ -19,6 +20,7 @@ export function QuizView({
   initialAnswers,
   wrongOnlyMode = false,
   knownQuestions = [],
+  startedAt,
   onFinish, 
   onReset,
   onProgressUpdate,
@@ -29,6 +31,29 @@ export function QuizView({
     initialAnswers || new Map()
   );
   const [showAnswer, setShowAnswer] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  
+  // startedAt이 있으면 사용, 없으면 현재 시간
+  const actualStartTime = startedAt || Date.now();
+
+  // 타이머
+  useEffect(() => {
+    // 초기 경과 시간 계산
+    setElapsedTime(Math.floor((Date.now() - actualStartTime) / 1000));
+    
+    const timer = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - actualStartTime) / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [actualStartTime]);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   const currentQuestion = questions[currentIndex];
   const selectedAnswers = userAnswers.get(currentQuestion.number) || [];
@@ -65,7 +90,7 @@ export function QuizView({
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      onFinish(userAnswers);
+      onFinish(userAnswers, elapsedTime);
     }
   };
 
@@ -85,6 +110,7 @@ export function QuizView({
         <button onClick={onReset} className="btn-reset">← 목록으로</button>
         <div className="progress-info">
           {wrongOnlyMode && <span className="wrong-only-badge">오답 모드</span>}
+          <span className="timer">⏱ {formatTime(elapsedTime)}</span>
           <span className="progress">
             {currentIndex + 1} / {questions.length}
           </span>

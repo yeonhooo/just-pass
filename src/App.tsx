@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { PdfUploader } from './components/PdfUploader';
 import { QuizList } from './components/QuizList';
 import { QuizSettings } from './components/QuizSettings';
 import { QuizView } from './components/QuizView';
 import { ResultView } from './components/ResultView';
+import { AdminPage } from './components/AdminPage';
 import { AuthWrapper, SignOutButton } from './components/AuthWrapper';
 import { extractTextFromPdf, parseQuestions } from './utils/pdfParser';
 import { shuffleQuestions, shuffleAllChoices } from './utils/shuffle';
@@ -47,6 +49,7 @@ function App() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [knownQuestions, setKnownQuestions] = useState<number[]>([]);
   const [, setCurrentProgress] = useState<CloudProgress | null>(null);
+  const [startedAt, setStartedAt] = useState<number | undefined>(undefined);
   
   // 설정
   const [settingShuffleQ, setSettingShuffleQ] = useState(false);
@@ -155,6 +158,10 @@ function App() {
       
       if (progress && !progress.completedAt) {
         // 진행 중인 퀴즈 이어서
+        // startedAt이 없으면 현재 시간으로 설정 (기존 데이터 호환)
+        const savedStartedAt = progress.startedAt || Date.now();
+        setStartedAt(savedStartedAt);
+        
         const answersMap = new Map(
           Object.entries(progress.userAnswers).map(([k, v]) => [Number(k), v])
         );
@@ -164,6 +171,7 @@ function App() {
         setWrongOnlyMode(false);
         setView('quiz');
       } else {
+        setStartedAt(undefined);
         setView('settings');
       }
     } catch (err) {
@@ -174,7 +182,7 @@ function App() {
     }
   };
 
-  const handleStartQuiz = () => {
+  const handleStartQuiz = async () => {
     let targetQuestions = [...questions];
     
     if (settingExcludeKnown && knownQuestions.length > 0) {
@@ -187,6 +195,23 @@ function App() {
     
     if (settingShuffleC) {
       targetQuestions = shuffleAllChoices(targetQuestions);
+    }
+    
+    // 시작 시간 설정 및 저장
+    const now = Date.now();
+    setStartedAt(now);
+    
+    if (currentQuizId) {
+      try {
+        await saveProgressToCloud(currentQuizId, {
+          currentIndex: 0,
+          userAnswers: {},
+          knownQuestions,
+          startedAt: now,
+        });
+      } catch (err) {
+        console.error('시작 시간 저장 실패:', err);
+      }
     }
     
     setFilteredQuestions(targetQuestions);
@@ -214,6 +239,7 @@ function App() {
         currentIndex: index,
         userAnswers: Object.fromEntries(answers),
         knownQuestions,
+        startedAt,
       });
     } catch (err) {
       console.error('진행 상황 저장 실패:', err);
@@ -240,8 +266,11 @@ function App() {
     }
   };
 
-  const handleFinish = async (answers: Map<number, string[]>) => {
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  const handleFinish = async (answers: Map<number, string[]>, time: number) => {
     setUserAnswers(answers);
+    setElapsedTime(time);
     
     if (currentQuizId) {
       const targetQuestions = filteredQuestions;
@@ -319,7 +348,7 @@ function App() {
     <AuthWrapper>
       <div className="app">
         <header className="app-header">
-          <h1 onClick={handleReset} style={{ cursor: 'pointer' }}>Just Pass</h1>
+          <h1 onClick={handleReset} style={{ cursor: 'pointer' }}><span className="just">JUST</span> <span className="pass">PASS</span></h1>
           <SignOutButton />
         </header>
         
@@ -376,6 +405,7 @@ function App() {
               initialAnswers={userAnswers}
               wrongOnlyMode={wrongOnlyMode}
               knownQuestions={knownQuestions}
+              startedAt={startedAt}
               onFinish={handleFinish}
               onReset={handleReset}
               onProgressUpdate={handleProgressUpdate}
@@ -387,6 +417,7 @@ function App() {
             <ResultView 
               questions={filteredQuestions}
               userAnswers={userAnswers}
+              elapsedTime={elapsedTime}
               onRetry={handleRetry}
               onRetryWrongOnly={handleRetryWrongOnly}
               onReset={handleReset}
@@ -398,4 +429,13 @@ function App() {
   );
 }
 
-export default App;
+function AppWithRoutes() {
+  return (
+    <Routes>
+      <Route path="/admin" element={<AuthWrapper><AdminPage /></AuthWrapper>} />
+      <Route path="*" element={<App />} />
+    </Routes>
+  );
+}
+
+export default AppWithRoutes;

@@ -126,3 +126,11 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     "authenticated" = aws_iam_role.cognito_authenticated.arn
   }
 }
+
+
+# Admin Group
+resource "aws_cognito_user_group" "admin" {
+  name         = "admin"
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = "Administrator group"
+}

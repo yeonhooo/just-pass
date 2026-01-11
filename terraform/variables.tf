@@ -13,7 +13,7 @@ variable "aws_profile" {
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "auto-quiz"
+  default     = "just-pass"
 }
 
 variable "environment" {

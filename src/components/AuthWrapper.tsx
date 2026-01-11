@@ -66,7 +66,7 @@ const components = {
           letterSpacing: '-0.03em',
           textShadow: '0 2px 4px rgba(2, 132, 199, 0.15)',
         }}>
-          Just Pass
+          JUST PASS
         </h1>
       </div>
     );

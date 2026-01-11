@@ -31,3 +31,8 @@ output "s3_pdf_bucket" {
   description = "S3 Bucket for PDF storage"
   value       = aws_s3_bucket.pdf_storage.bucket
 }
+
+output "admin_api_url" {
+  description = "Admin API Gateway URL"
+  value       = aws_api_gateway_stage.prod.invoke_url
+}

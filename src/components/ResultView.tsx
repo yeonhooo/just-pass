@@ -3,12 +3,13 @@ import type { Question } from '../types/quiz';
 interface Props {
   questions: Question[];
   userAnswers: Map<number, string[]>;
+  elapsedTime: number;
   onRetry: () => void;
   onRetryWrongOnly: () => void;
   onReset: () => void;
 }
 
-export function ResultView({ questions, userAnswers, onRetry, onRetryWrongOnly, onReset }: Props) {
+export function ResultView({ questions, userAnswers, elapsedTime, onRetry, onRetryWrongOnly, onReset }: Props) {
   const results = questions.map(q => {
     const userAnswer = userAnswers.get(q.number) || [];
     const isCorrect = 
@@ -21,6 +22,15 @@ export function ResultView({ questions, userAnswers, onRetry, onRetryWrongOnly, 
   const wrongCount = results.length - correctCount;
   const score = Math.round((correctCount / questions.length) * 100);
 
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}시간 ${m}분 ${s}초`;
+    if (m > 0) return `${m}분 ${s}초`;
+    return `${s}초`;
+  };
+
   return (
     <div className="result-container">
       <div className="result-header">
@@ -31,6 +41,9 @@ export function ResultView({ questions, userAnswers, onRetry, onRetryWrongOnly, 
         </div>
         <p className="score-detail">
           {questions.length}문제 중 {correctCount}문제 정답
+        </p>
+        <p className="elapsed-time">
+          ⏱ 소요시간: {formatTime(elapsedTime)}
         </p>
       </div>
 

@@ -85,6 +85,7 @@ export interface CloudProgress {
   currentIndex: number;
   userAnswers: Record<number, string[]>;
   knownQuestions: number[];
+  startedAt?: number;
   completedAt?: number;
   score?: number;
 }
