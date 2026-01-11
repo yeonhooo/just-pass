@@ -23,12 +23,6 @@ output "dynamodb_progress_table" {
   value       = aws_dynamodb_table.progress.name
 }
 
-output "amplify_app_id" {
-  description = "Amplify App ID"
-  value       = aws_amplify_app.main.id
-}
-
-output "amplify_default_domain" {
-  description = "Amplify Default Domain"
-  value       = aws_amplify_app.main.default_domain
-}
+# Amplify는 콘솔에서 관리하므로 output 제거
+# App ID: d3o0zqn8c8tein
+# URL: https://main.d3o0zqn8c8tein.amplifyapp.com

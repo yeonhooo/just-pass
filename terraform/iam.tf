@@ -59,30 +59,4 @@ resource "aws_iam_role_policy" "cognito_authenticated_dynamodb" {
   })
 }
 
-# Amplify Service Role
-resource "aws_iam_role" "amplify_service" {
-  name = "${var.project_name}-amplify-service"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "amplify.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-amplify-service"
-  }
-}
-
-# Amplify Service Role Policy
-resource "aws_iam_role_policy_attachment" "amplify_service" {
-  role       = aws_iam_role.amplify_service.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess-Amplify"
-}
+# Amplify Service Role은 amplify.tf에서 관리

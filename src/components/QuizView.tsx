@@ -138,7 +138,7 @@ export function QuizView({
           ← 이전
         </button>
         
-        {!showAnswer ? (
+        {!showAnswer && (
           <button 
             onClick={() => setShowAnswer(true)} 
             disabled={selectedAnswers.length === 0}
@@ -146,11 +146,14 @@ export function QuizView({
           >
             정답 확인
           </button>
-        ) : (
-          <button onClick={handleNext} className="btn-next">
-            {currentIndex === questions.length - 1 ? '결과 보기' : '다음 →'}
-          </button>
         )}
+        
+        <button 
+          onClick={handleNext} 
+          className="btn-next"
+        >
+          {currentIndex === questions.length - 1 ? '결과 보기' : '다음 →'}
+        </button>
       </div>
     </div>
   );

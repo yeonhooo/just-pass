@@ -35,6 +35,7 @@ function App() {
   const { authStatus } = useAuthenticator((context) => [context.authStatus]);
   const [view, setView] = useState<View>('home');
   const [savedQuizzes, setSavedQuizzes] = useState<QuizListItem[]>([]);
+  const [progressMap, setProgressMap] = useState<Map<string, { quizId: string; currentIndex: number; completedAt?: number; score?: number }>>(new Map());
   const [currentQuizId, setCurrentQuizId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [userAnswers, setUserAnswers] = useState<Map<number, string[]>>(new Map());
@@ -56,12 +57,33 @@ function App() {
     try {
       setIsLoading(true);
       const quizzes = await getQuizzesFromCloud();
-      setSavedQuizzes(quizzes.map(q => ({
+      const sortedQuizzes = quizzes.map(q => ({
         quizId: q.quizId,
         name: q.name,
         questionCount: q.questionCount,
         createdAt: q.createdAt,
-      })).sort((a, b) => b.createdAt - a.createdAt));
+      })).sort((a, b) => b.createdAt - a.createdAt);
+      
+      setSavedQuizzes(sortedQuizzes);
+      
+      // 각 퀴즈의 진행 상황 로드
+      const progressEntries: [string, { quizId: string; currentIndex: number; completedAt?: number; score?: number }][] = [];
+      for (const quiz of sortedQuizzes) {
+        try {
+          const progress = await getProgressFromCloud(quiz.quizId);
+          if (progress) {
+            progressEntries.push([quiz.quizId, {
+              quizId: quiz.quizId,
+              currentIndex: progress.currentIndex,
+              completedAt: progress.completedAt,
+              score: progress.score,
+            }]);
+          }
+        } catch {
+          // 진행 상황 없으면 무시
+        }
+      }
+      setProgressMap(new Map(progressEntries));
     } catch (err) {
       console.error('퀴즈 목록 로드 실패:', err);
       setError('퀴즈 목록을 불러오는데 실패했습니다.');
@@ -311,6 +333,7 @@ function App() {
                   questionCount: q.questionCount,
                   createdAt: q.createdAt,
                 }))}
+                progressMap={progressMap}
                 onSelect={handleSelectQuiz}
                 onDelete={handleDeleteQuiz}
                 onUploadNew={() => setView('upload')}

@@ -5,14 +5,22 @@ interface QuizItem {
   createdAt: number;
 }
 
+interface ProgressInfo {
+  quizId: string;
+  currentIndex: number;
+  completedAt?: number;
+  score?: number;
+}
+
 interface Props {
   quizzes: QuizItem[];
+  progressMap: Map<string, ProgressInfo>;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onUploadNew: () => void;
 }
 
-export function QuizList({ quizzes, onSelect, onDelete, onUploadNew }: Props) {
+export function QuizList({ quizzes, progressMap, onSelect, onDelete, onUploadNew }: Props) {
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('ko-KR', {
       year: 'numeric',
@@ -26,6 +34,18 @@ export function QuizList({ quizzes, onSelect, onDelete, onUploadNew }: Props) {
     if (confirm('이 퀴즈를 삭제하시겠습니까?')) {
       onDelete(id);
     }
+  };
+
+  const getProgressText = (quiz: QuizItem) => {
+    const progress = progressMap.get(quiz.id);
+    if (!progress) return null;
+    
+    if (progress.completedAt) {
+      return `완료 (${progress.score}점)`;
+    }
+    
+    const percent = Math.round((progress.currentIndex / quiz.questionCount) * 100);
+    return `진행 중 ${percent}%`;
   };
 
   return (
@@ -44,26 +64,30 @@ export function QuizList({ quizzes, onSelect, onDelete, onUploadNew }: Props) {
         </div>
       ) : (
         <div className="quiz-items">
-          {quizzes.map((quiz) => (
-            <div 
-              key={quiz.id} 
-              className="quiz-item"
-              onClick={() => onSelect(quiz.id)}
-            >
-              <div className="quiz-item-info">
-                <h3>{quiz.name}</h3>
-                <p>
-                  {quiz.questionCount}문제 · {formatDate(quiz.createdAt)}
-                </p>
-              </div>
-              <button 
-                className="btn-delete"
-                onClick={(e) => handleDelete(e, quiz.id)}
+          {quizzes.map((quiz) => {
+            const progressText = getProgressText(quiz);
+            return (
+              <div 
+                key={quiz.id} 
+                className="quiz-item"
+                onClick={() => onSelect(quiz.id)}
               >
-                🗑️
-              </button>
-            </div>
-          ))}
+                <div className="quiz-item-info">
+                  <h3>{quiz.name}</h3>
+                  <p>
+                    {quiz.questionCount}문제 · {formatDate(quiz.createdAt)}
+                    {progressText && <span className="progress-badge">{progressText}</span>}
+                  </p>
+                </div>
+                <button 
+                  className="btn-delete"
+                  onClick={(e) => handleDelete(e, quiz.id)}
+                >
+                  🗑️
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
