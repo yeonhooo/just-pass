@@ -68,7 +68,7 @@ ${text}
 };
 
 // POST /ai/explain - 문제 해설 생성 (비동기)
-const explainQuestion = async (text, answer) => {
+const explainQuestion = async (text, answer, explanation) => {
   const jobId = randomUUID();
   const ttl = Math.floor(Date.now() / 1000) + 86400; // 24시간 후
   
@@ -84,7 +84,7 @@ const explainQuestion = async (text, answer) => {
   }));
   
   // 백그라운드에서 해설 생성 (비동기)
-  generateExplanation(jobId, text, answer).catch(err => {
+  generateExplanation(jobId, text, answer, explanation).catch(err => {
     console.error('Background explanation generation failed:', err);
   });
   
@@ -93,12 +93,16 @@ const explainQuestion = async (text, answer) => {
 };
 
 // 백그라운드 해설 생성
-const generateExplanation = async (jobId, text, answer) => {
+const generateExplanation = async (jobId, text, answer, originalExplanation) => {
   try {
+    const refSection = originalExplanation 
+      ? `\n\n참고 해설 (참고용으로만 활용하세요):\n${originalExplanation}` 
+      : '';
+    
     const prompt = `당신은 경험많은 시니어 AWS Solutions Architect 입니다. 다음은 AWS 자격증 시험 문제입니다. 정답은 "${answer}"입니다.
 
 문제:
-${text}
+${text}${refSection}
 
 이 문제에 대해 다음 내용을 포함한 상세한 해설을 한글로 작성해주세요:
 1. 정답이 왜 맞는지 설명
@@ -185,7 +189,7 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body || '{}');
-    const { text, answer } = body;
+    const { text, answer, explanation } = body;
 
     if (!text) {
       return response(400, { error: 'text is required' });
@@ -200,7 +204,7 @@ export const handler = async (event) => {
       if (!answer) {
         return response(400, { error: 'answer is required for explanation' });
       }
-      return await explainQuestion(text, answer);
+      return await explainQuestion(text, answer, explanation);
     }
 
     return response(404, { error: 'Not Found' });

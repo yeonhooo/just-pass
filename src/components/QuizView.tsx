@@ -32,7 +32,7 @@ const renderMarkdown = (text: string): string => {
 };
 
 // Bedrock을 통한 번역 및 해설 생성
-const callBedrockAPI = async (action: 'translate' | 'explain', text: string, answer?: string): Promise<string> => {
+const callBedrockAPI = async (action: 'translate' | 'explain', text: string, answer?: string, explanation?: string): Promise<string> => {
   try {
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken?.toString();
@@ -50,7 +50,7 @@ const callBedrockAPI = async (action: 'translate' | 'explain', text: string, ans
         'Content-Type': 'application/json',
         'Authorization': token,
       },
-      body: JSON.stringify({ text, answer }),
+      body: JSON.stringify({ text, answer, explanation }),
     });
     
     console.log(`${action} response status:`, response.status);
@@ -228,7 +228,7 @@ export function QuizView({
         setLoadingExplanation(true);
         try {
           const correctAnswer = currentQuestion.answer.join(', ');
-          const explanation = await callBedrockAPI('explain', currentQuestion.text, correctAnswer);
+          const explanation = await callBedrockAPI('explain', currentQuestion.text, correctAnswer, currentQuestion.explanation);
           const cleanedExplanation = renderMarkdown(explanation);
           
           setAiExplanation(cleanedExplanation);

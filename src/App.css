@@ -892,19 +892,25 @@ body {
   font-size: 0.875rem;
   text-align: center;
   background: white;
-  color: #4a5568;
+  color: #1e293b;
   font-weight: 600;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .jump-input:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.jump-input:focus::placeholder {
+  color: transparent;
 }
 
 .jump-input::placeholder {
-  color: #4a5568;
+  color: #94a3b8;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .timer {
