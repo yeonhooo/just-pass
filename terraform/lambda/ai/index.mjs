@@ -33,7 +33,7 @@ const callClaude = async (prompt) => {
   
   const payload = {
     anthropic_version: 'bedrock-2023-05-31',
-    max_tokens: 2000,
+    max_tokens: 4096,
     messages: [
       {
         role: 'user',

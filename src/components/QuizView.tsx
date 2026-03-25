@@ -515,6 +515,8 @@ export function QuizView({
                       정답을 확인하면 AI가 생성한 상세 해설을 볼 수 있습니다.
                     </div>
                   )
+                ) : loadingExplanation ? (
+                  <div className="panel-loading">해설 생성 중... 잠시만 기다려주세요.</div>
                 ) : (
                   <div className="ai-explanation" dangerouslySetInnerHTML={{ __html: aiExplanation }} />
                 )}

@@ -4,7 +4,7 @@ import { fromIni } from '@aws-sdk/credential-provider-ini';
 
 const client = new DynamoDBClient({ 
   region: 'ap-northeast-2',
-  credentials: fromIni({ profile: 'default' })
+  credentials: fromIni({ profile: 'isen-yeonho' })
 });
 const docClient = DynamoDBDocumentClient.from(client);
 
