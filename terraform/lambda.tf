@@ -139,6 +139,29 @@ resource "aws_iam_role_policy_attachment" "ai_lambda_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# AI Lambda DynamoDB 권한
+resource "aws_iam_role_policy" "ai_lambda_dynamodb" {
+  name = "${var.project_name}-ai-dynamodb"
+  role = aws_iam_role.ai_lambda.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ]
+        Resource = [
+          aws_dynamodb_table.ai_jobs.arn
+        ]
+      }
+    ]
+  })
+}
+
 # AI Lambda Bedrock 권한
 resource "aws_iam_role_policy" "ai_lambda_bedrock" {
   name = "${var.project_name}-ai-bedrock"
@@ -177,6 +200,12 @@ resource "aws_lambda_function" "ai" {
   source_code_hash = data.archive_file.ai_lambda.output_base64sha256
   runtime          = "nodejs20.x"
   timeout          = 60
+
+  environment {
+    variables = {
+      AI_JOBS_TABLE = aws_dynamodb_table.ai_jobs.name
+    }
+  }
 
   tags = {
     Name = "${var.project_name}-ai"

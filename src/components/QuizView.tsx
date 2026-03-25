@@ -66,6 +66,16 @@ const callBedrockAPI = async (action: 'translate' | 'explain', text: string, ans
     }
     
     const data = await response.json();
+    
+    // 해설 생성은 비동기 처리 (202 Accepted)
+    if (action === 'explain' && response.status === 202) {
+      const jobId = data.jobId;
+      console.log('Explanation job started:', jobId);
+      
+      // 폴링으로 결과 확인
+      return await pollJobStatus(jobId, token);
+    }
+    
     console.log(`${action} result:`, data.result?.substring(0, 100));
     return data.result;
   } catch (error) {
@@ -73,6 +83,42 @@ const callBedrockAPI = async (action: 'translate' | 'explain', text: string, ans
     return action === 'translate' ? '번역 실패 (네트워크 오류)' : '해설 생성 실패 (네트워크 오류)';
   }
 }
+
+// Job 상태 폴링
+const pollJobStatus = async (jobId: string, token: string, maxAttempts = 60): Promise<string> => {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 2000)); // 2초 대기
+    
+    try {
+      const response = await fetch(`${AI_API_URL}/ai/status/${jobId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': token,
+        },
+      });
+      
+      if (!response.ok) {
+        console.error('Status check failed:', response.status);
+        continue;
+      }
+      
+      const data = await response.json();
+      console.log(`Job ${jobId} status:`, data.status);
+      
+      if (data.status === 'completed') {
+        return data.result;
+      }
+      
+      if (data.status === 'failed') {
+        return `해설 생성 실패: ${data.error || '알 수 없는 오류'}`;
+      }
+    } catch (error) {
+      console.error('Polling error:', error);
+    }
+  }
+  
+  return '해설 생성 시간 초과 (2분)';
+};
 
 export function QuizView({ 
   questions,

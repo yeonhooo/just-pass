@@ -73,3 +73,30 @@ resource "aws_dynamodb_table" "progress" {
     Name = "${var.project_name}-progress"
   }
 }
+
+# DynamoDB Table - AI Jobs (비동기 작업 상태)
+resource "aws_dynamodb_table" "ai_jobs" {
+  name         = "${var.project_name}-ai-jobs"
+  billing_mode = "PAY_PER_REQUEST"
+
+  hash_key = "jobId"
+
+  attribute {
+    name = "jobId"
+    type = "S"
+  }
+
+  # TTL 설정 (24시간 후 자동 삭제)
+  ttl {
+    attribute_name = "ttl"
+    enabled        = true
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-ai-jobs"
+  }
+}

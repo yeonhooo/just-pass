@@ -14,11 +14,14 @@
 #
 # 환경 변수 (Amplify 콘솔에서 설정됨):
 # - VITE_AWS_REGION: ap-northeast-2
-# - VITE_COGNITO_USER_POOL_ID: ap-northeast-2_YpFOZDRSn
-# - VITE_COGNITO_CLIENT_ID: 2uguonkfttpkq3p150icq22qqv
-# - VITE_COGNITO_IDENTITY_POOL_ID: ap-northeast-2:ee8011ca-56e8-4404-afb3-57d6c31796eb
-# - VITE_DYNAMODB_QUIZZES_TABLE: auto-quiz-quizzes
-# - VITE_DYNAMODB_PROGRESS_TABLE: auto-quiz-progress
+# - VITE_COGNITO_USER_POOL_ID: ap-northeast-2_pXumWhA6l
+# - VITE_COGNITO_CLIENT_ID: 5m5k5dj7875jhhhq4h946u5usj
+# - VITE_COGNITO_IDENTITY_POOL_ID: ap-northeast-2:65df24ec-326c-4020-8d0c-3f8641ec6373
+# - VITE_DYNAMODB_QUIZZES_TABLE: just-pass-quizzes
+# - VITE_DYNAMODB_PROGRESS_TABLE: just-pass-progress
+# - VITE_S3_PDF_BUCKET: just-pass-pdf-storage
+# - VITE_ADMIN_API_URL: https://rjws0djv17.execute-api.ap-northeast-2.amazonaws.com/prod
+# - VITE_AI_API_URL: https://rjws0djv17.execute-api.ap-northeast-2.amazonaws.com/prod
 #
 # 빌드 설정:
 # - Build command: npm run build

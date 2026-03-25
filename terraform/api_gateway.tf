@@ -255,16 +255,20 @@ resource "aws_api_gateway_deployment" "admin" {
     aws_api_gateway_integration.stats_options,
     aws_api_gateway_integration.post_translate,
     aws_api_gateway_integration.post_explain,
+    aws_api_gateway_integration.get_status,
     aws_api_gateway_integration.translate_options,
     aws_api_gateway_integration.explain_options,
+    aws_api_gateway_integration.status_options,
   ]
 
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_integration.post_translate.id,
       aws_api_gateway_integration.post_explain.id,
+      aws_api_gateway_integration.get_status.id,
       aws_api_gateway_integration.translate_options.id,
       aws_api_gateway_integration.explain_options.id,
+      aws_api_gateway_integration.status_options.id,
     ]))
   }
 
@@ -307,6 +311,20 @@ resource "aws_api_gateway_resource" "explain" {
   path_part   = "explain"
 }
 
+# /ai/status 리소스
+resource "aws_api_gateway_resource" "status" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  parent_id   = aws_api_gateway_resource.ai.id
+  path_part   = "status"
+}
+
+# /ai/status/{jobId} 리소스
+resource "aws_api_gateway_resource" "status_job" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  parent_id   = aws_api_gateway_resource.status.id
+  path_part   = "{jobId}"
+}
+
 # POST /ai/translate
 resource "aws_api_gateway_method" "post_translate" {
   rest_api_id   = aws_api_gateway_rest_api.admin.id
@@ -323,6 +341,7 @@ resource "aws_api_gateway_integration" "post_translate" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.ai.invoke_arn
+  timeout_milliseconds    = 29000  # API Gateway 최대값
 }
 
 # POST /ai/explain
@@ -341,6 +360,7 @@ resource "aws_api_gateway_integration" "post_explain" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.ai.invoke_arn
+  timeout_milliseconds    = 29000  # API Gateway 최대값
 }
 
 # CORS - OPTIONS for /ai/translate
@@ -384,6 +404,73 @@ resource "aws_api_gateway_integration_response" "translate_options" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# GET /ai/status/{jobId}
+resource "aws_api_gateway_method" "get_status" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.status_job.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+
+  request_parameters = {
+    "method.request.path.jobId" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "get_status" {
+  rest_api_id             = aws_api_gateway_rest_api.admin.id
+  resource_id             = aws_api_gateway_resource.status_job.id
+  http_method             = aws_api_gateway_method.get_status.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.ai.invoke_arn
+}
+
+# CORS - OPTIONS for /ai/status/{jobId}
+resource "aws_api_gateway_method" "status_options" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.status_job.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "status_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.status_job.id
+  http_method = aws_api_gateway_method.status_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "status_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.status_job.id
+  http_method = aws_api_gateway_method.status_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "status_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.status_job.id
+  http_method = aws_api_gateway_method.status_options.http_method
+  status_code = aws_api_gateway_method_response.status_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
