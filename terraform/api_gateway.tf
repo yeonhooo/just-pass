@@ -253,6 +253,10 @@ resource "aws_api_gateway_deployment" "admin" {
     aws_api_gateway_integration.users_options,
     aws_api_gateway_integration.user_options,
     aws_api_gateway_integration.stats_options,
+    aws_api_gateway_integration.post_translate,
+    aws_api_gateway_integration.post_explain,
+    aws_api_gateway_integration.translate_options,
+    aws_api_gateway_integration.explain_options,
   ]
 
   lifecycle {
@@ -268,5 +272,154 @@ resource "aws_api_gateway_stage" "prod" {
 
   tags = {
     Name = "${var.project_name}-admin-api-prod"
+  }
+}
+
+# ===== AI API Endpoints =====
+
+# /ai 리소스
+resource "aws_api_gateway_resource" "ai" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  parent_id   = aws_api_gateway_rest_api.admin.root_resource_id
+  path_part   = "ai"
+}
+
+# /ai/translate 리소스
+resource "aws_api_gateway_resource" "translate" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  parent_id   = aws_api_gateway_resource.ai.id
+  path_part   = "translate"
+}
+
+# /ai/explain 리소스
+resource "aws_api_gateway_resource" "explain" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  parent_id   = aws_api_gateway_resource.ai.id
+  path_part   = "explain"
+}
+
+# POST /ai/translate
+resource "aws_api_gateway_method" "post_translate" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.translate.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "post_translate" {
+  rest_api_id             = aws_api_gateway_rest_api.admin.id
+  resource_id             = aws_api_gateway_resource.translate.id
+  http_method             = aws_api_gateway_method.post_translate.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.ai.invoke_arn
+}
+
+# POST /ai/explain
+resource "aws_api_gateway_method" "post_explain" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.explain.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+}
+
+resource "aws_api_gateway_integration" "post_explain" {
+  rest_api_id             = aws_api_gateway_rest_api.admin.id
+  resource_id             = aws_api_gateway_resource.explain.id
+  http_method             = aws_api_gateway_method.post_explain.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.ai.invoke_arn
+}
+
+# CORS - OPTIONS for /ai/translate
+resource "aws_api_gateway_method" "translate_options" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.translate.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "translate_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.translate.id
+  http_method = aws_api_gateway_method.translate_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "translate_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.translate.id
+  http_method = aws_api_gateway_method.translate_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "translate_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.translate.id
+  http_method = aws_api_gateway_method.translate_options.http_method
+  status_code = aws_api_gateway_method_response.translate_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# CORS - OPTIONS for /ai/explain
+resource "aws_api_gateway_method" "explain_options" {
+  rest_api_id   = aws_api_gateway_rest_api.admin.id
+  resource_id   = aws_api_gateway_resource.explain.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "explain_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.explain.id
+  http_method = aws_api_gateway_method.explain_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "explain_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.explain.id
+  http_method = aws_api_gateway_method.explain_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "explain_options" {
+  rest_api_id = aws_api_gateway_rest_api.admin.id
+  resource_id = aws_api_gateway_resource.explain.id
+  http_method = aws_api_gateway_method.explain_options.http_method
+  status_code = aws_api_gateway_method_response.explain_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 }
