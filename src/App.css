@@ -276,14 +276,112 @@ body {
   color: #374151;
   line-height: 1.8;
   font-size: 0.95rem;
-  white-space: pre-wrap;
 }
 
 .ai-explanation {
   color: #374151;
-  line-height: 1.8;
+  line-height: 1.7;
   font-size: 0.95rem;
-  white-space: pre-wrap;
+}
+
+/* 마크다운 렌더링 스타일 */
+.ai-explanation h1,
+.ai-explanation h2,
+.ai-explanation h3,
+.ai-explanation h4 {
+  color: #1e293b;
+  margin: 1.2em 0 0.5em;
+  font-weight: 600;
+}
+
+.ai-explanation h1 { font-size: 1.2rem; }
+.ai-explanation h2 { font-size: 1.1rem; }
+.ai-explanation h3 { font-size: 1.05rem; }
+
+.ai-explanation p {
+  margin: 0.6em 0;
+}
+
+.ai-explanation ul,
+.ai-explanation ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ai-explanation li {
+  margin: 0.3em 0;
+}
+
+.ai-explanation strong {
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.ai-explanation code {
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.88em;
+  color: #e11d48;
+}
+
+.ai-explanation pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+
+.ai-explanation pre code {
+  background: none;
+  padding: 0;
+  color: #334155;
+}
+
+.ai-explanation blockquote {
+  border-left: 3px solid #3b82f6;
+  margin: 0.8em 0;
+  padding: 0.5em 1em;
+  background: #eff6ff;
+  border-radius: 0 6px 6px 0;
+  color: #1e40af;
+}
+
+.ai-explanation hr {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 1em 0;
+}
+
+.ai-explanation table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.9rem;
+}
+
+.ai-explanation th,
+.ai-explanation td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5em 0.8em;
+  text-align: left;
+}
+
+.ai-explanation th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ai-explanation tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.translation-text strong {
+  color: #1e40af;
+  font-weight: 600;
 }
 
 .panel-loading {

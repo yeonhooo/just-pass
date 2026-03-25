@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import type { Question } from '../types/quiz';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { saveTranslationToCloud, saveAiExplanationToCloud, saveProgressToCloud } from '../utils/cloudStorage';
+import { marked } from 'marked';
+
+// marked 설정
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
 interface Props {
   questions: Question[];
@@ -19,20 +26,9 @@ interface Props {
 
 const AI_API_URL = import.meta.env.VITE_AI_API_URL;
 
-// 마크다운 문법을 HTML로 변환하거나 제거
-const cleanMarkdown = (text: string): string => {
-  return text
-    // 구분선 제거
-    .replace(/^---+\s*$/gm, '')
-    // 헤더 제거 (##, ###)
-    .replace(/^#+\s+/gm, '')
-    // 볼드 텍스트 (**text** -> <strong>text</strong>)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // 인용문 (> text -> text)
-    .replace(/^>\s+/gm, '')
-    // 빈 줄 정리
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+// 마크다운을 HTML로 변환
+const renderMarkdown = (text: string): string => {
+  return marked.parse(text) as string;
 };
 
 // Bedrock을 통한 번역 및 해설 생성
@@ -213,7 +209,7 @@ export function QuizView({
           try {
             const fullText = `${currentQuestion.text}\n\n${currentQuestion.choices.map(c => `${c.letter}. ${c.text}`).join('\n')}`;
             const translated = await callBedrockAPI('translate', fullText);
-            const cleanedTranslation = cleanMarkdown(translated);
+            const cleanedTranslation = renderMarkdown(translated);
             
             setTranslation(cleanedTranslation);
             saveTranslationToCloud(quizId, currentQuestion.number, cleanedTranslation).catch(err => {
@@ -233,7 +229,7 @@ export function QuizView({
         try {
           const correctAnswer = currentQuestion.answer.join(', ');
           const explanation = await callBedrockAPI('explain', currentQuestion.text, correctAnswer);
-          const cleanedExplanation = cleanMarkdown(explanation);
+          const cleanedExplanation = renderMarkdown(explanation);
           
           setAiExplanation(cleanedExplanation);
           saveAiExplanationToCloud(quizId, currentQuestion.number, cleanedExplanation).catch(err => {
