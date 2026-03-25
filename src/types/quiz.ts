@@ -9,6 +9,8 @@ export interface Question {
   choices: Choice[];
   answer: string[];
   explanation: string;
+  translation?: string; // AI 번역 캐시
+  aiExplanation?: string; // AI 해설 캐시
 }
 
 export interface QuizState {

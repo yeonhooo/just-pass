@@ -93,6 +93,32 @@ export function clearProgress(quizId: string): void {
   localStorage.removeItem(PROGRESS_PREFIX + quizId);
 }
 
+// 번역 캐시 저장
+export function saveTranslationCache(quizId: string, questionNumber: number, translation: string): void {
+  const quiz = loadQuiz(quizId);
+  if (!quiz) return;
+  
+  const question = quiz.questions.find(q => q.number === questionNumber);
+  if (question) {
+    question.translation = translation;
+    const key = QUIZ_PREFIX + quizId;
+    localStorage.setItem(key, JSON.stringify(quiz));
+  }
+}
+
+// AI 해설 캐시 저장
+export function saveAiExplanationCache(quizId: string, questionNumber: number, explanation: string): void {
+  const quiz = loadQuiz(quizId);
+  if (!quiz) return;
+  
+  const question = quiz.questions.find(q => q.number === questionNumber);
+  if (question) {
+    question.aiExplanation = explanation;
+    const key = QUIZ_PREFIX + quizId;
+    localStorage.setItem(key, JSON.stringify(quiz));
+  }
+}
+
 
 // 아는 문제 저장
 export function saveKnownQuestions(quizId: string, questionNumbers: number[]): void {

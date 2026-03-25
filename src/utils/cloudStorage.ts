@@ -289,3 +289,89 @@ export async function uploadPdfToS3(file: File, userEmail: string): Promise<stri
   
   return key;
 }
+
+// 번역 캐시를 DynamoDB에 저장
+export async function saveTranslationToCloud(quizId: string, questionNumber: number, translation: string): Promise<void> {
+  const docClient = await getDocClient();
+  const userId = await getUserId();
+  
+  // 메타데이터 조회 (청크 수 확인)
+  const metaResult = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_QUIZZES_TABLE,
+    Key: { userId, quizId },
+  }));
+  
+  if (!metaResult.Item) return;
+  
+  const meta = metaResult.Item as CloudQuizMeta;
+  
+  // 해당 문제가 어느 청크에 있는지 찾기
+  const chunkIndex = Math.floor((questionNumber - 1) / CHUNK_SIZE);
+  
+  if (chunkIndex >= meta.chunkCount) return;
+  
+  // 청크 조회
+  const chunkResult = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_QUIZZES_TABLE,
+    Key: { userId, quizId: `${quizId}#chunk#${chunkIndex}` },
+  }));
+  
+  if (!chunkResult.Item) return;
+  
+  const chunk = chunkResult.Item as QuizChunk;
+  
+  // 문제 찾아서 번역 추가
+  const question = chunk.questions.find(q => q.number === questionNumber);
+  if (question) {
+    question.translation = translation;
+    
+    // 청크 업데이트
+    await docClient.send(new PutCommand({
+      TableName: DYNAMODB_QUIZZES_TABLE,
+      Item: chunk,
+    }));
+  }
+}
+
+// AI 해설 캐시를 DynamoDB에 저장
+export async function saveAiExplanationToCloud(quizId: string, questionNumber: number, explanation: string): Promise<void> {
+  const docClient = await getDocClient();
+  const userId = await getUserId();
+  
+  // 메타데이터 조회 (청크 수 확인)
+  const metaResult = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_QUIZZES_TABLE,
+    Key: { userId, quizId },
+  }));
+  
+  if (!metaResult.Item) return;
+  
+  const meta = metaResult.Item as CloudQuizMeta;
+  
+  // 해당 문제가 어느 청크에 있는지 찾기
+  const chunkIndex = Math.floor((questionNumber - 1) / CHUNK_SIZE);
+  
+  if (chunkIndex >= meta.chunkCount) return;
+  
+  // 청크 조회
+  const chunkResult = await docClient.send(new GetCommand({
+    TableName: DYNAMODB_QUIZZES_TABLE,
+    Key: { userId, quizId: `${quizId}#chunk#${chunkIndex}` },
+  }));
+  
+  if (!chunkResult.Item) return;
+  
+  const chunk = chunkResult.Item as QuizChunk;
+  
+  // 문제 찾아서 해설 추가
+  const question = chunk.questions.find(q => q.number === questionNumber);
+  if (question) {
+    question.aiExplanation = explanation;
+    
+    // 청크 업데이트
+    await docClient.send(new PutCommand({
+      TableName: DYNAMODB_QUIZZES_TABLE,
+      Item: chunk,
+    }));
+  }
+}

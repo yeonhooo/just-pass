@@ -150,9 +150,12 @@ resource "aws_iam_role_policy" "ai_lambda_bedrock" {
       {
         Effect = "Allow"
         Action = [
-          "bedrock:InvokeModel"
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
         ]
-        Resource = "arn:aws:bedrock:ap-northeast-2::foundation-model/anthropic.claude-sonnet-4-6"
+        Resource = [
+          "arn:aws:bedrock:*:*:*/*anthropic.claude*"
+        ]
       }
     ]
   })
@@ -173,7 +176,7 @@ resource "aws_lambda_function" "ai" {
   handler          = "index.handler"
   source_code_hash = data.archive_file.ai_lambda.output_base64sha256
   runtime          = "nodejs20.x"
-  timeout          = 30
+  timeout          = 60
 
   tags = {
     Name = "${var.project_name}-ai"

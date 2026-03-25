@@ -398,9 +398,10 @@ function App() {
             />
           )}
           
-          {view === 'quiz' && (
+          {view === 'quiz' && currentQuizId && (
             <QuizView 
               questions={filteredQuestions}
+              quizId={currentQuizId}
               startIndex={startIndex}
               initialAnswers={userAnswers}
               wrongOnlyMode={wrongOnlyMode}

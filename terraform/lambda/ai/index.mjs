@@ -1,8 +1,9 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
-const bedrockClient = new BedrockRuntimeClient({ region: 'ap-northeast-2' });
+const bedrockClient = new BedrockRuntimeClient({ region: 'us-east-1' });
 
-const CLAUDE_MODEL_ID = 'anthropic.claude-sonnet-4-6';
+// Global Claude Sonnet 4.6
+const CLAUDE_MODEL_ID = 'global.anthropic.claude-sonnet-4-6';
 
 // CORS 헤더
 const corsHeaders = {
@@ -21,6 +22,8 @@ const response = (statusCode, body) => ({
 
 // Bedrock Claude 호출
 const callClaude = async (prompt) => {
+  console.log('Using model ID:', CLAUDE_MODEL_ID);
+  
   const payload = {
     anthropic_version: 'bedrock-2023-05-31',
     max_tokens: 2000,
@@ -39,6 +42,7 @@ const callClaude = async (prompt) => {
     body: JSON.stringify(payload),
   });
 
+  console.log('Invoking Bedrock with model ID:', CLAUDE_MODEL_ID);
   const result = await bedrockClient.send(command);
   const responseBody = JSON.parse(new TextDecoder().decode(result.body));
   return responseBody.content[0].text;
@@ -50,7 +54,7 @@ const translateText = async (text) => {
 
 ${text}
 
-번역:`;
+번역 결과만 출력하고, "문제 번역", "번역:" 등의 레이블은 포함하지 마세요.`;
 
   const translation = await callClaude(prompt);
   return response(200, { result: translation });
@@ -58,7 +62,7 @@ ${text}
 
 // POST /ai/explain - 문제 해설 생성
 const explainQuestion = async (text, answer) => {
-  const prompt = `다음은 AWS 자격증 시험 문제입니다. 정답은 "${answer}"입니다.
+  const prompt = `당신은 경험많은 시니어 AWS Solutions Architect 입니다. 다음은 AWS 자격증 시험 문제입니다. 정답은 "${answer}"입니다.
 
 문제:
 ${text}
